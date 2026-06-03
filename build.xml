@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NOTA: No editar este archivo manualmente. Es gestionado por NetBeans IDE. -->
+<project name="YogurinBustamante" default="default" basedir=".">
+    <description>Builds, tests, and runs the project YogurinBustamante.</description>
+    <import file="nbproject/build-impl.xml"/>
+</project>
