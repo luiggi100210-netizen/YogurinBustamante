@@ -1,8 +1,10 @@
 package vista;
 
 import controlador.ReportesController;
+import util.Tema;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
@@ -11,8 +13,6 @@ import java.util.Map;
 /**
  * Formulario de reportes y estadisticas.
  * Muestra ventas por dia, productos mas vendidos y rendimiento por vendedor.
- *
- * @author Luiggi
  */
 public class ReportesForm extends JFrame {
 
@@ -30,45 +30,82 @@ public class ReportesForm extends JFrame {
     }
 
     private void inicializarComponentes() {
-        setLayout(new BorderLayout(10, 10));
-        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FONDO);
 
-        // Panel de filtros
-        JPanel panelFiltros = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        panelFiltros.setBorder(BorderFactory.createTitledBorder("Filtros"));
+        add(Tema.header("Reportes y Estadisticas"), BorderLayout.NORTH);
+
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBackground(Tema.FONDO);
+        panelPrincipal.setBorder(new EmptyBorder(12, 14, 12, 14));
+
+        panelPrincipal.add(crearPanelFiltros(), BorderLayout.NORTH);
+        panelPrincipal.add(crearPanelResultados(), BorderLayout.CENTER);
+
+        add(panelPrincipal, BorderLayout.CENTER);
+    }
+
+    private JPanel crearPanelFiltros() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
+        panel.setBackground(Tema.BLANCO);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.BORDE, 1),
+            new EmptyBorder(4, 8, 4, 8)
+        ));
+
+        JLabel lbl = new JLabel("Filtros:");
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(Tema.SIDEBAR);
+        panel.add(lbl);
 
         String hoy = LocalDate.now().toString();
         txtDesde = new JTextField(hoy, 12);
         txtHasta = new JTextField(hoy, 12);
+        txtDesde.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtHasta.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
         cmbTipoReporte = new JComboBox<>(new String[]{
             "Ventas por dia", "Productos mas vendidos", "Ventas por vendedor"
         });
+        cmbTipoReporte.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        cmbTipoReporte.setPreferredSize(new Dimension(210, 30));
 
-        JButton btnGenerar = new JButton("Generar Reporte");
-        btnGenerar.setBackground(new Color(0x3B6FA0));
-        btnGenerar.setForeground(Color.WHITE);
+        JButton btnGenerar = Tema.botonPrimario("Generar Reporte");
+        btnGenerar.setPreferredSize(new Dimension(150, 34));
         btnGenerar.addActionListener(e -> generarReporte());
 
-        panelFiltros.add(new JLabel("Desde:"));
-        panelFiltros.add(txtDesde);
-        panelFiltros.add(new JLabel("Hasta:"));
-        panelFiltros.add(txtHasta);
-        panelFiltros.add(new JLabel("Tipo:"));
-        panelFiltros.add(cmbTipoReporte);
-        panelFiltros.add(btnGenerar);
+        panel.add(new JLabel("Desde:"));
+        panel.add(txtDesde);
+        panel.add(new JLabel("Hasta:"));
+        panel.add(txtHasta);
+        panel.add(new JLabel("Tipo:"));
+        panel.add(cmbTipoReporte);
+        panel.add(btnGenerar);
 
-        // Tabla de resultados
+        return panel;
+    }
+
+    private JPanel crearPanelResultados() {
         modeloTabla = new DefaultTableModel() {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         tablaReporte = new JTable(modeloTabla);
-        JScrollPane scroll = new JScrollPane(tablaReporte);
-        scroll.setBorder(BorderFactory.createTitledBorder("Resultados"));
+        Tema.estilizarTabla(tablaReporte);
 
-        panelPrincipal.add(panelFiltros, BorderLayout.NORTH);
-        panelPrincipal.add(scroll, BorderLayout.CENTER);
-        add(panelPrincipal);
+        JScrollPane scroll = new JScrollPane(tablaReporte);
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDE, 1));
+        scroll.getViewport().setBackground(Tema.BLANCO);
+
+        JLabel lblSub = new JLabel("Resultados del reporte");
+        lblSub.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblSub.setForeground(Tema.SIDEBAR);
+        lblSub.setBorder(new EmptyBorder(8, 0, 4, 0));
+
+        JPanel panel = new JPanel(new BorderLayout(0, 4));
+        panel.setBackground(Tema.FONDO);
+        panel.add(lblSub, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
     }
 
     private void generarReporte() {
@@ -81,11 +118,11 @@ public class ReportesForm extends JFrame {
             return;
         }
 
-        int tipoSeleccionado = cmbTipoReporte.getSelectedIndex();
+        int tipo = cmbTipoReporte.getSelectedIndex();
         modeloTabla.setRowCount(0);
         modeloTabla.setColumnCount(0);
 
-        switch (tipoSeleccionado) {
+        switch (tipo) {
             case 0 -> mostrarVentasPorDia(desde, hasta);
             case 1 -> mostrarProductosMasVendidos(desde, hasta);
             case 2 -> mostrarVentasPorVendedor(desde, hasta);
@@ -119,7 +156,8 @@ public class ReportesForm extends JFrame {
     private void configurarVentana() {
         setTitle("Reportes y Estadisticas");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(700, 480);
+        setSize(780, 520);
+        setMinimumSize(new Dimension(680, 440));
         setLocationRelativeTo(null);
     }
 }

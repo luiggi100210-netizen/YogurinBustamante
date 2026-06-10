@@ -1,8 +1,10 @@
 package vista;
 
 import controlador.RespaldoController;
+import util.Tema;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 
@@ -10,8 +12,6 @@ import java.io.File;
  * Formulario del modulo de respaldo de datos.
  * Permite al administrador generar una copia de seguridad
  * de la base de datos MySQL en una carpeta elegida.
- *
- * @author Luiggi
  */
 public class RespaldoForm extends JFrame {
 
@@ -29,55 +29,108 @@ public class RespaldoForm extends JFrame {
     }
 
     private void inicializarComponentes() {
-        setLayout(new BorderLayout(10, 10));
-        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FONDO);
 
-        // Titulo informativo
-        JLabel lblInfo = new JLabel(
-            "<html><b>Respaldo de Base de Datos</b><br>"
-            + "Genera un archivo .sql con toda la informacion del sistema.</html>",
-            SwingConstants.CENTER
-        );
-        lblInfo.setFont(new Font("Arial", Font.PLAIN, 13));
-        lblInfo.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        add(Tema.header("Respaldo de Base de Datos"), BorderLayout.NORTH);
 
-        // Seleccion de carpeta destino
-        JPanel panelCarpeta = new JPanel(new BorderLayout(8, 0));
-        panelCarpeta.setBorder(BorderFactory.createTitledBorder("Carpeta de destino"));
-        txtCarpeta = new JTextField(System.getProperty("user.home") + File.separator + "Desktop");
-        btnSeleccionar = new JButton("Examinar...");
-        btnSeleccionar.addActionListener(e -> seleccionarCarpeta());
-        panelCarpeta.add(txtCarpeta, BorderLayout.CENTER);
-        panelCarpeta.add(btnSeleccionar, BorderLayout.EAST);
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 12));
+        panelPrincipal.setBackground(Tema.FONDO);
+        panelPrincipal.setBorder(new EmptyBorder(14, 16, 14, 16));
 
-        // Boton principal
-        btnRespaldar = new JButton("Generar Respaldo Ahora");
-        btnRespaldar.setFont(new Font("Arial", Font.BOLD, 14));
-        btnRespaldar.setBackground(new Color(0x1565C0));
-        btnRespaldar.setForeground(Color.WHITE);
-        btnRespaldar.setPreferredSize(new Dimension(0, 45));
-        btnRespaldar.addActionListener(e -> ejecutarRespaldo());
+        panelPrincipal.add(crearPanelSuperior(), BorderLayout.NORTH);
+        panelPrincipal.add(crearPanelLog(),      BorderLayout.CENTER);
 
-        // Area de log
-        areaLog = new JTextArea(8, 40);
-        areaLog.setEditable(false);
-        areaLog.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        areaLog.setText("Listo para generar respaldo.\n");
-        JScrollPane scroll = new JScrollPane(areaLog);
-        scroll.setBorder(BorderFactory.createTitledBorder("Registro de actividad"));
-
-        JPanel panelSuperior = new JPanel(new BorderLayout(5, 10));
-        panelSuperior.add(lblInfo, BorderLayout.NORTH);
-        panelSuperior.add(panelCarpeta, BorderLayout.CENTER);
-        panelSuperior.add(btnRespaldar, BorderLayout.SOUTH);
-
-        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
-        panelPrincipal.add(scroll, BorderLayout.CENTER);
-        add(panelPrincipal);
+        add(panelPrincipal, BorderLayout.CENTER);
     }
 
-    /** Abre un selector de carpeta para elegir el destino del respaldo. */
+    private JPanel crearPanelSuperior() {
+        JPanel panel = new JPanel(new BorderLayout(0, 10));
+        panel.setBackground(Tema.FONDO);
+
+        // Info
+        JPanel panelInfo = new JPanel(new BorderLayout());
+        panelInfo.setBackground(Tema.BLANCO);
+        panelInfo.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.BORDE, 1),
+            new EmptyBorder(10, 14, 10, 14)
+        ));
+        JLabel lblInfo = new JLabel(
+            "<html><b>Genera un archivo .sql</b> con toda la informacion del sistema.<br>"
+            + "Selecciona la carpeta de destino y presiona <i>Generar Respaldo</i>.</html>"
+        );
+        lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblInfo.setForeground(Tema.NEUTRO);
+        panelInfo.add(lblInfo);
+
+        // Carpeta
+        JPanel panelCarpeta = new JPanel(new BorderLayout(8, 0));
+        panelCarpeta.setBackground(Tema.BLANCO);
+        panelCarpeta.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.BORDE, 1),
+            new EmptyBorder(8, 12, 8, 12)
+        ));
+
+        JLabel lblCarpeta = new JLabel("Carpeta de destino:");
+        lblCarpeta.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        lblCarpeta.setForeground(Tema.NEUTRO);
+
+        txtCarpeta = new JTextField(System.getProperty("user.home") + File.separator + "Desktop");
+        txtCarpeta.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+        btnSeleccionar = Tema.botonNeutro("Examinar...");
+        btnSeleccionar.setPreferredSize(new Dimension(110, 32));
+        btnSeleccionar.addActionListener(e -> seleccionarCarpeta());
+
+        JPanel panelCarpetaInner = new JPanel(new BorderLayout(0, 4));
+        panelCarpetaInner.setBackground(Tema.BLANCO);
+        panelCarpetaInner.add(lblCarpeta, BorderLayout.NORTH);
+
+        JPanel panelRuta = new JPanel(new BorderLayout(6, 0));
+        panelRuta.setBackground(Tema.BLANCO);
+        panelRuta.add(txtCarpeta, BorderLayout.CENTER);
+        panelRuta.add(btnSeleccionar, BorderLayout.EAST);
+        panelCarpetaInner.add(panelRuta, BorderLayout.CENTER);
+        panelCarpeta.add(panelCarpetaInner);
+
+        // Boton principal
+        JPanel panelBoton = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        panelBoton.setBackground(Tema.FONDO);
+        btnRespaldar = Tema.botonExito("Generar Respaldo Ahora");
+        btnRespaldar.setPreferredSize(new Dimension(200, 40));
+        btnRespaldar.addActionListener(e -> ejecutarRespaldo());
+        panelBoton.add(btnRespaldar);
+
+        panel.add(panelInfo,   BorderLayout.NORTH);
+        panel.add(panelCarpeta, BorderLayout.CENTER);
+        panel.add(panelBoton,  BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel crearPanelLog() {
+        areaLog = new JTextArea();
+        areaLog.setEditable(false);
+        areaLog.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        areaLog.setBackground(new Color(0xF8F8F8));
+        areaLog.setText("Listo para generar respaldo.\n");
+        areaLog.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        JScrollPane scroll = new JScrollPane(areaLog);
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDE, 1));
+
+        JLabel lblSub = new JLabel("Registro de actividad");
+        lblSub.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblSub.setForeground(Tema.SIDEBAR);
+        lblSub.setBorder(new EmptyBorder(6, 0, 4, 0));
+
+        JPanel panel = new JPanel(new BorderLayout(0, 4));
+        panel.setBackground(Tema.FONDO);
+        panel.add(lblSub, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
     private void seleccionarCarpeta() {
         JFileChooser chooser = new JFileChooser(txtCarpeta.getText());
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -88,7 +141,6 @@ public class RespaldoForm extends JFrame {
         }
     }
 
-    /** Ejecuta el respaldo y muestra el resultado en el area de log. */
     private void ejecutarRespaldo() {
         String carpeta = txtCarpeta.getText().trim();
 
@@ -111,7 +163,6 @@ public class RespaldoForm extends JFrame {
         btnRespaldar.setEnabled(false);
         log("Iniciando respaldo...");
 
-        // Ejecutar en hilo separado para no bloquear la UI
         new Thread(() -> {
             String rutaArchivo = controller.ejecutarRespaldo(carpeta);
             SwingUtilities.invokeLater(() -> {
@@ -130,7 +181,6 @@ public class RespaldoForm extends JFrame {
         }).start();
     }
 
-    /** Agrega una linea al area de log con timestamp. */
     private void log(String mensaje) {
         areaLog.append(mensaje + "\n");
         areaLog.setCaretPosition(areaLog.getDocument().getLength());
@@ -139,8 +189,8 @@ public class RespaldoForm extends JFrame {
     private void configurarVentana() {
         setTitle("Respaldo de Datos");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(540, 400);
+        setSize(580, 440);
+        setMinimumSize(new Dimension(520, 380));
         setLocationRelativeTo(null);
-        setResizable(false);
     }
 }

@@ -1,8 +1,10 @@
 package vista;
 
 import controlador.ReportesController;
+import util.Tema;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.time.LocalDate;
 import java.util.Map;
@@ -10,8 +12,6 @@ import java.util.Map;
 /**
  * Formulario de cierre de caja diario.
  * Muestra el resumen de ventas del dia: numero de transacciones y monto total.
- *
- * @author Luiggi
  */
 public class CierreCajaForm extends JFrame {
 
@@ -30,53 +30,96 @@ public class CierreCajaForm extends JFrame {
     }
 
     private void inicializarComponentes() {
-        setLayout(new BorderLayout(10, 10));
-        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FONDO);
 
-        // Titulo
-        JLabel lblTitulo = new JLabel("CIERRE DE CAJA", SwingConstants.CENTER);
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 20));
-        lblTitulo.setForeground(new Color(0x3B6FA0));
+        add(Tema.header("Cierre de Caja  —  " + LocalDate.now()), BorderLayout.NORTH);
 
-        // Indicadores
-        JPanel panelIndicadores = new JPanel(new GridLayout(3, 2, 10, 10));
-        panelIndicadores.setBorder(BorderFactory.createTitledBorder("Resumen del Dia"));
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 14));
+        panelPrincipal.setBackground(Tema.FONDO);
+        panelPrincipal.setBorder(new EmptyBorder(14, 16, 14, 16));
 
-        lblFecha     = new JLabel();
-        lblNumVentas = new JLabel();
-        lblTotalDia  = new JLabel();
+        panelPrincipal.add(crearPanelResumen(), BorderLayout.NORTH);
+        panelPrincipal.add(crearPanelDetalle(), BorderLayout.CENTER);
+        panelPrincipal.add(crearBotonImprimir(), BorderLayout.SOUTH);
 
-        lblFecha.setFont(new Font("Arial", Font.PLAIN, 14));
-        lblNumVentas.setFont(new Font("Arial", Font.PLAIN, 14));
-        lblTotalDia.setFont(new Font("Arial", Font.BOLD, 18));
-        lblTotalDia.setForeground(new Color(0x2E7D32));
+        add(panelPrincipal, BorderLayout.CENTER);
+    }
 
-        panelIndicadores.add(new JLabel("Fecha:", SwingConstants.RIGHT));
-        panelIndicadores.add(lblFecha);
-        panelIndicadores.add(new JLabel("Numero de ventas:", SwingConstants.RIGHT));
-        panelIndicadores.add(lblNumVentas);
-        panelIndicadores.add(new JLabel("Total del dia:", SwingConstants.RIGHT));
-        panelIndicadores.add(lblTotalDia);
+    private JPanel crearPanelResumen() {
+        JPanel panel = new JPanel(new GridLayout(1, 3, 12, 0));
+        panel.setBackground(Tema.FONDO);
+        panel.setPreferredSize(new Dimension(0, 100));
 
-        // Detalle por vendedor
-        areaDetalle = new JTextArea(8, 40);
+        lblFecha     = new JLabel("—", SwingConstants.CENTER);
+        lblNumVentas = new JLabel("—", SwingConstants.CENTER);
+        lblTotalDia  = new JLabel("S/ 0.00", SwingConstants.CENTER);
+
+        panel.add(crearKPI(lblFecha,     "Fecha",            new Color(0x1A6FBA)));
+        panel.add(crearKPI(lblNumVentas, "Numero de Ventas", new Color(0x1A8A4A)));
+        panel.add(crearKPI(lblTotalDia,  "Total del Dia",    new Color(0xE07B00)));
+
+        return panel;
+    }
+
+    private JPanel crearKPI(JLabel lblValor, String titulo, Color color) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(Tema.BLANCO);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 4, 0, 0, color),
+            new EmptyBorder(12, 14, 12, 14)
+        ));
+
+        lblValor.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblValor.setForeground(color);
+        lblValor.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblTitulo = new JLabel(titulo);
+        lblTitulo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblTitulo.setForeground(Tema.TEXTO_GRIS);
+        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        card.add(Box.createVerticalGlue());
+        card.add(lblValor);
+        card.add(Box.createVerticalStrut(4));
+        card.add(lblTitulo);
+        card.add(Box.createVerticalGlue());
+        return card;
+    }
+
+    private JPanel crearPanelDetalle() {
+        areaDetalle = new JTextArea();
         areaDetalle.setEditable(false);
         areaDetalle.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        JScrollPane scroll = new JScrollPane(areaDetalle);
-        scroll.setBorder(BorderFactory.createTitledBorder("Ventas por Vendedor"));
+        areaDetalle.setBackground(Tema.BLANCO);
+        areaDetalle.setBorder(new EmptyBorder(8, 10, 8, 10));
 
-        JButton btnImprimir = new JButton("Imprimir Cierre");
+        JScrollPane scroll = new JScrollPane(areaDetalle);
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDE, 1));
+
+        JLabel lblSub = new JLabel("Detalle por vendedor");
+        lblSub.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblSub.setForeground(Tema.SIDEBAR);
+        lblSub.setBorder(new EmptyBorder(8, 0, 4, 0));
+
+        JPanel panel = new JPanel(new BorderLayout(0, 4));
+        panel.setBackground(Tema.FONDO);
+        panel.add(lblSub, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel crearBotonImprimir() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 6));
+        panel.setBackground(Tema.FONDO);
+        JButton btnImprimir = Tema.botonPrimario("Imprimir Cierre");
         btnImprimir.addActionListener(e ->
             JOptionPane.showMessageDialog(this,
                 "Funcion de impresion disponible en version futura.",
                 "Info", JOptionPane.INFORMATION_MESSAGE));
-
-        panelPrincipal.add(lblTitulo, BorderLayout.NORTH);
-        panelPrincipal.add(panelIndicadores, BorderLayout.CENTER);
-        panelPrincipal.add(scroll, BorderLayout.SOUTH);
-        add(panelPrincipal, BorderLayout.CENTER);
-        add(btnImprimir, BorderLayout.SOUTH);
+        panel.add(btnImprimir);
+        return panel;
     }
 
     private void cargarResumen() {
@@ -100,9 +143,7 @@ public class CierreCajaForm extends JFrame {
         areaDetalle.setText(sb.length() > 0 ? sb.toString() : "Sin ventas registradas hoy.");
     }
 
-    /** Delega al controlador para obtener el resumen del dia. */
     private double[] obtenerResumen() {
-        // Usa directamente el DAO a traves del controlador de reportes
         try {
             dao.ReporteDAO dao = new dao.ReporteDAO();
             return dao.resumenCierreCaja();
@@ -115,7 +156,8 @@ public class CierreCajaForm extends JFrame {
     private void configurarVentana() {
         setTitle("Cierre de Caja — " + LocalDate.now());
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(520, 480);
+        setSize(580, 480);
+        setMinimumSize(new Dimension(520, 420));
         setLocationRelativeTo(null);
     }
 }

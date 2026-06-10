@@ -2,8 +2,10 @@ package vista;
 
 import controlador.ProductosController;
 import modelo.Producto;
+import util.Tema;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
@@ -11,8 +13,6 @@ import java.util.List;
 /**
  * Formulario de gestion de productos.
  * Permite listar, agregar, editar y eliminar productos.
- *
- * @author Luiggi
  */
 public class ProductosForm extends JFrame {
 
@@ -20,8 +20,8 @@ public class ProductosForm extends JFrame {
     private DefaultTableModel modeloTabla;
     private JTextField txtNombre, txtPrecio, txtStock, txtDescripcion;
     private JButton btnGuardar, btnEditar, btnEliminar, btnLimpiar;
+    private JLabel lblHint;
 
-    /** ID del producto seleccionado para edicion; 0 si es nuevo */
     private int idEditando = 0;
 
     private final ProductosController controller;
@@ -34,13 +34,29 @@ public class ProductosForm extends JFrame {
     }
 
     private void inicializarComponentes() {
-        setLayout(new BorderLayout(10, 10));
-        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FONDO);
 
-        // Formulario de campos
+        add(Tema.header("Gestion de Productos"), BorderLayout.NORTH);
+
+        JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
+        panelPrincipal.setBackground(Tema.FONDO);
+        panelPrincipal.setBorder(new EmptyBorder(12, 14, 12, 14));
+
+        panelPrincipal.add(crearPanelFormulario(), BorderLayout.NORTH);
+        panelPrincipal.add(crearPanelTabla(),      BorderLayout.CENTER);
+
+        add(panelPrincipal, BorderLayout.CENTER);
+    }
+
+    private JPanel crearPanelFormulario() {
         JPanel panelForm = new JPanel(new GridBagLayout());
-        panelForm.setBorder(BorderFactory.createTitledBorder("Datos del Producto"));
+        panelForm.setBackground(Tema.BLANCO);
+        panelForm.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.BORDE, 1),
+            new EmptyBorder(12, 14, 8, 14)
+        ));
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 8, 5, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -50,30 +66,42 @@ public class ProductosForm extends JFrame {
         txtStock       = agregarCampo(panelForm, gbc, "Stock:",        2);
         txtDescripcion = agregarCampo(panelForm, gbc, "Descripcion:",  3);
 
-        // Botones del formulario
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        btnGuardar  = new JButton("Guardar");
-        btnEditar   = new JButton("Actualizar");
-        btnEliminar = new JButton("Eliminar");
-        btnLimpiar  = new JButton("Limpiar");
+        // Botones
+        btnGuardar  = Tema.botonExito("Guardar");
+        btnEditar   = Tema.botonAdvertencia("Actualizar");
+        btnEliminar = Tema.botonPeligro("Eliminar");
+        btnLimpiar  = Tema.botonNeutro("Limpiar");
 
         btnEditar.setEnabled(false);
         btnEliminar.setEnabled(false);
 
-        btnGuardar.addActionListener(e -> guardar());
-        btnEditar.addActionListener(e -> actualizar());
+        btnGuardar.addActionListener(e  -> guardar());
+        btnEditar.addActionListener(e   -> actualizar());
         btnEliminar.addActionListener(e -> eliminar());
-        btnLimpiar.addActionListener(e -> limpiarFormulario());
+        btnLimpiar.addActionListener(e  -> limpiarFormulario());
 
+        lblHint = Tema.hint("Haga clic en una fila para editar o eliminar");
+
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 4));
+        panelBotones.setBackground(Tema.BLANCO);
         panelBotones.add(btnGuardar);
         panelBotones.add(btnEditar);
         panelBotones.add(btnEliminar);
         panelBotones.add(btnLimpiar);
 
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
-        panelForm.add(panelBotones, gbc);
+        JPanel panelAcciones = new JPanel(new BorderLayout());
+        panelAcciones.setBackground(Tema.BLANCO);
+        panelAcciones.add(panelBotones, BorderLayout.CENTER);
+        panelAcciones.add(lblHint, BorderLayout.SOUTH);
+        lblHint.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Tabla de productos
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2;
+        panelForm.add(panelAcciones, gbc);
+
+        return panelForm;
+    }
+
+    private JPanel crearPanelTabla() {
         String[] columnas = {"ID", "Nombre", "Precio", "Stock", "Descripcion"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
@@ -81,20 +109,33 @@ public class ProductosForm extends JFrame {
         tablaProductos = new JTable(modeloTabla);
         tablaProductos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tablaProductos.getSelectionModel().addListSelectionListener(e -> cargarSeleccion());
+        Tema.estilizarTabla(tablaProductos);
 
         JScrollPane scroll = new JScrollPane(tablaProductos);
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDE, 1));
+        scroll.getViewport().setBackground(Tema.BLANCO);
 
-        panelPrincipal.add(panelForm, BorderLayout.NORTH);
-        panelPrincipal.add(scroll, BorderLayout.CENTER);
-        add(panelPrincipal);
+        JLabel lblSub = new JLabel("Listado de productos registrados");
+        lblSub.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblSub.setForeground(Tema.SIDEBAR);
+        lblSub.setBorder(new EmptyBorder(8, 0, 4, 0));
+
+        JPanel panel = new JPanel(new BorderLayout(0, 4));
+        panel.setBackground(Tema.FONDO);
+        panel.add(lblSub, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
     }
 
-    /** Crea un par etiqueta-campo y lo agrega al panel del formulario. */
     private JTextField agregarCampo(JPanel panel, GridBagConstraints gbc,
                                     String etiqueta, int fila) {
         gbc.gridx = 0; gbc.gridy = fila; gbc.gridwidth = 1;
-        panel.add(new JLabel(etiqueta), gbc);
+        JLabel lbl = new JLabel(etiqueta);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        lbl.setForeground(Tema.NEUTRO);
+        panel.add(lbl, gbc);
         JTextField campo = new JTextField(20);
+        campo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         gbc.gridx = 1;
         panel.add(campo, gbc);
         return campo;
@@ -112,7 +153,6 @@ public class ProductosForm extends JFrame {
         }
     }
 
-    /** Rellena el formulario con el producto seleccionado en la tabla. */
     private void cargarSeleccion() {
         int fila = tablaProductos.getSelectedRow();
         if (fila < 0) return;
@@ -126,13 +166,13 @@ public class ProductosForm extends JFrame {
         btnGuardar.setEnabled(false);
         btnEditar.setEnabled(true);
         btnEliminar.setEnabled(true);
+        lblHint.setText("Producto seleccionado — puede actualizar o eliminar");
     }
 
     private void guardar() {
         String error = controller.guardarProducto(
             txtNombre.getText(), txtPrecio.getText(),
             txtStock.getText(), txtDescripcion.getText());
-
         mostrarResultado(error, "Producto guardado correctamente.");
     }
 
@@ -140,21 +180,18 @@ public class ProductosForm extends JFrame {
         String error = controller.actualizarProducto(
             idEditando, txtNombre.getText(), txtPrecio.getText(),
             txtStock.getText(), txtDescripcion.getText());
-
         mostrarResultado(error, "Producto actualizado correctamente.");
     }
 
     private void eliminar() {
         int confirmar = JOptionPane.showConfirmDialog(this,
-            "¿Desea eliminar este producto?", "Confirmar", JOptionPane.YES_NO_OPTION);
-
+            "Desea eliminar este producto?", "Confirmar", JOptionPane.YES_NO_OPTION);
         if (confirmar == JOptionPane.YES_OPTION) {
             String error = controller.eliminarProducto(idEditando);
             mostrarResultado(error, "Producto eliminado correctamente.");
         }
     }
 
-    /** Muestra un mensaje y recarga la tabla si la operacion fue exitosa. */
     private void mostrarResultado(String error, String mensajeExito) {
         if (error != null) {
             JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
@@ -176,12 +213,14 @@ public class ProductosForm extends JFrame {
         btnGuardar.setEnabled(true);
         btnEditar.setEnabled(false);
         btnEliminar.setEnabled(false);
+        lblHint.setText("Haga clic en una fila para editar o eliminar");
     }
 
     private void configurarVentana() {
         setTitle("Gestion de Productos");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(700, 520);
+        setSize(780, 580);
+        setMinimumSize(new Dimension(680, 500));
         setLocationRelativeTo(null);
     }
 }

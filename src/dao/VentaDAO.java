@@ -205,7 +205,11 @@ public class VentaDAO {
         }
     }
 
-    /** Descuenta el stock de cada producto vendido. */
+    /**
+     * Descuenta el stock de cada producto vendido.
+     * Si algun producto no tiene stock suficiente, el UPDATE no afecta
+     * ninguna fila y se lanza una excepcion para revertir toda la venta.
+     */
     private void descontarStockProductos(Connection con, List<DetalleVenta> detalles)
             throws SQLException {
         String sql = "UPDATE productos SET stock = stock - ? WHERE id = ? AND stock >= ?";
@@ -217,7 +221,14 @@ public class VentaDAO {
                 ps.setInt(3, detalle.getCantidad());
                 ps.addBatch();
             }
-            ps.executeBatch();
+            int[] filasAfectadas = ps.executeBatch();
+
+            for (int i = 0; i < filasAfectadas.length; i++) {
+                if (filasAfectadas[i] == 0) {
+                    throw new SQLException("Stock insuficiente para el producto: "
+                            + detalles.get(i).getProducto().getNombre());
+                }
+            }
         }
     }
 

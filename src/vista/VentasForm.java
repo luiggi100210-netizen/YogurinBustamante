@@ -5,8 +5,10 @@ import controlador.VentasController;
 import modelo.Cliente;
 import modelo.DetalleVenta;
 import modelo.Producto;
+import util.Tema;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
@@ -14,29 +16,20 @@ import java.util.List;
 /**
  * Formulario de registro de ventas.
  * Permite buscar clientes, seleccionar productos y registrar la venta.
- *
- * @author Luiggi
  */
 public class VentasForm extends JFrame {
 
-    // Busqueda de cliente
     private JTextField txtDni;
     private JLabel lblNombreCliente;
     private Cliente clienteSeleccionado;
 
-    // Seleccion de producto
     private JComboBox<Producto> cmbProductos;
     private JTextField txtCantidad;
-    private JButton btnAgregar;
 
-    // Tabla del carrito
     private JTable tablaCarrito;
     private DefaultTableModel modeloTabla;
 
-    // Total y acciones
     private JLabel lblTotal;
-    private JButton btnRegistrar;
-    private JButton btnLimpiar;
 
     private final VentasController controller;
     private final ClientesController clientesController;
@@ -50,75 +43,144 @@ public class VentasForm extends JFrame {
     }
 
     private void inicializarComponentes() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout());
+        getContentPane().setBackground(Tema.FONDO);
+
+        add(Tema.header("Registro de Ventas"), BorderLayout.NORTH);
+
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
-        panelPrincipal.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        panelPrincipal.setBackground(Tema.FONDO);
+        panelPrincipal.setBorder(new EmptyBorder(12, 14, 12, 14));
+
+        panelPrincipal.add(crearPanelSuperior(), BorderLayout.NORTH);
+        panelPrincipal.add(crearPanelCarrito(),  BorderLayout.CENTER);
+        panelPrincipal.add(crearPanelAcciones(), BorderLayout.SOUTH);
+
+        add(panelPrincipal, BorderLayout.CENTER);
+    }
+
+    private JPanel crearPanelSuperior() {
+        JPanel panelSuperior = new JPanel(new GridLayout(2, 1, 0, 8));
+        panelSuperior.setBackground(Tema.FONDO);
 
         // Panel cliente
-        JPanel panelCliente = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        panelCliente.setBorder(BorderFactory.createTitledBorder("Cliente"));
+        JPanel panelCliente = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+        panelCliente.setBackground(Tema.BLANCO);
+        panelCliente.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.BORDE, 1),
+            new EmptyBorder(2, 4, 2, 4)
+        ));
+
+        JLabel lblClienteTitulo = new JLabel("Cliente:");
+        lblClienteTitulo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblClienteTitulo.setForeground(Tema.SIDEBAR);
+        panelCliente.add(lblClienteTitulo);
+
+        txtDni = new JTextField(12);
+        txtDni.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        txtDni.setPreferredSize(new Dimension(120, 30));
         panelCliente.add(new JLabel("DNI:"));
-        txtDni = new JTextField(10);
         panelCliente.add(txtDni);
-        JButton btnBuscar = new JButton("Buscar");
+
+        JButton btnBuscar = Tema.botonPrimario("Buscar");
+        btnBuscar.setPreferredSize(new Dimension(90, 30));
         btnBuscar.addActionListener(e -> buscarCliente());
         panelCliente.add(btnBuscar);
+
         lblNombreCliente = new JLabel("Sin seleccionar");
-        lblNombreCliente.setFont(new Font("Arial", Font.ITALIC, 12));
+        lblNombreCliente.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        lblNombreCliente.setForeground(Tema.NEUTRO);
         panelCliente.add(lblNombreCliente);
 
         // Panel producto
-        JPanel panelProducto = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-        panelProducto.setBorder(BorderFactory.createTitledBorder("Agregar Producto"));
+        JPanel panelProducto = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+        panelProducto.setBackground(Tema.BLANCO);
+        panelProducto.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.BORDE, 1),
+            new EmptyBorder(2, 4, 2, 4)
+        ));
+
+        JLabel lblProdTitulo = new JLabel("Agregar Producto:");
+        lblProdTitulo.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblProdTitulo.setForeground(Tema.SIDEBAR);
+        panelProducto.add(lblProdTitulo);
+
         cmbProductos = new JComboBox<>();
-        cmbProductos.setPreferredSize(new Dimension(200, 25));
+        cmbProductos.setPreferredSize(new Dimension(220, 30));
+        cmbProductos.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         panelProducto.add(cmbProductos);
+
         panelProducto.add(new JLabel("Cantidad:"));
-        txtCantidad = new JTextField(5);
+        txtCantidad = new JTextField(6);
+        txtCantidad.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         panelProducto.add(txtCantidad);
-        btnAgregar = new JButton("Agregar");
+
+        JButton btnAgregar = Tema.botonExito("Agregar");
+        btnAgregar.setPreferredSize(new Dimension(90, 30));
         btnAgregar.addActionListener(e -> agregarProducto());
         panelProducto.add(btnAgregar);
 
-        JPanel panelSuperior = new JPanel(new GridLayout(2, 1));
         panelSuperior.add(panelCliente);
         panelSuperior.add(panelProducto);
+        return panelSuperior;
+    }
 
-        // Tabla carrito
+    private JPanel crearPanelCarrito() {
         String[] columnas = {"Producto", "Precio Unit.", "Cantidad", "Subtotal"};
         modeloTabla = new DefaultTableModel(columnas, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
         tablaCarrito = new JTable(modeloTabla);
+        Tema.estilizarTabla(tablaCarrito);
+
         JScrollPane scroll = new JScrollPane(tablaCarrito);
-        scroll.setBorder(BorderFactory.createTitledBorder("Carrito de Venta"));
+        scroll.setBorder(BorderFactory.createLineBorder(Tema.BORDE, 1));
+        scroll.getViewport().setBackground(Tema.BLANCO);
 
-        // Panel inferior — total y botones
-        JPanel panelInferior = new JPanel(new BorderLayout());
+        JLabel lblSub = new JLabel("Carrito de venta");
+        lblSub.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblSub.setForeground(Tema.SIDEBAR);
+        lblSub.setBorder(new EmptyBorder(8, 0, 4, 0));
+
+        JPanel panel = new JPanel(new BorderLayout(0, 4));
+        panel.setBackground(Tema.FONDO);
+        panel.add(lblSub, BorderLayout.NORTH);
+        panel.add(scroll, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel crearPanelAcciones() {
+        JPanel panelAcciones = new JPanel(new BorderLayout());
+        panelAcciones.setBackground(Tema.BLANCO);
+        panelAcciones.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(Tema.BORDE, 1),
+            new EmptyBorder(8, 12, 8, 12)
+        ));
+
         lblTotal = new JLabel("Total: S/ 0.00", SwingConstants.RIGHT);
-        lblTotal.setFont(new Font("Arial", Font.BOLD, 16));
-        lblTotal.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 15));
-        panelInferior.add(lblTotal, BorderLayout.NORTH);
+        lblTotal.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTotal.setForeground(Tema.SIDEBAR);
+        panelAcciones.add(lblTotal, BorderLayout.WEST);
 
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
-        JButton btnEliminar = new JButton("Eliminar Fila");
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        panelBotones.setBackground(Tema.BLANCO);
+
+        JButton btnEliminar = Tema.botonPeligro("Quitar fila");
         btnEliminar.addActionListener(e -> eliminarFilaSeleccionada());
-        btnLimpiar = new JButton("Limpiar");
+
+        JButton btnLimpiar = Tema.botonNeutro("Limpiar");
         btnLimpiar.addActionListener(e -> limpiarCarrito());
-        btnRegistrar = new JButton("Registrar Venta");
-        btnRegistrar.setBackground(new Color(0x2E7D32));
-        btnRegistrar.setForeground(Color.WHITE);
-        btnRegistrar.setFont(new Font("Arial", Font.BOLD, 13));
+
+        JButton btnRegistrar = Tema.botonExito("Registrar Venta");
+        btnRegistrar.setPreferredSize(new Dimension(150, 34));
         btnRegistrar.addActionListener(e -> registrarVenta());
+
         panelBotones.add(btnEliminar);
         panelBotones.add(btnLimpiar);
         panelBotones.add(btnRegistrar);
-        panelInferior.add(panelBotones, BorderLayout.SOUTH);
+        panelAcciones.add(panelBotones, BorderLayout.EAST);
 
-        panelPrincipal.add(panelSuperior, BorderLayout.NORTH);
-        panelPrincipal.add(scroll, BorderLayout.CENTER);
-        panelPrincipal.add(panelInferior, BorderLayout.SOUTH);
-        add(panelPrincipal);
+        return panelAcciones;
     }
 
     private void cargarProductos() {
@@ -133,8 +195,10 @@ public class VentasForm extends JFrame {
         clienteSeleccionado = clientesController.buscarPorDni(txtDni.getText().trim());
         if (clienteSeleccionado != null) {
             lblNombreCliente.setText(clienteSeleccionado.getNombre());
+            lblNombreCliente.setForeground(Tema.EXITO);
         } else {
             lblNombreCliente.setText("Cliente no encontrado.");
+            lblNombreCliente.setForeground(Tema.PELIGRO);
         }
     }
 
@@ -163,6 +227,7 @@ public class VentasForm extends JFrame {
         clienteSeleccionado = null;
         txtDni.setText("");
         lblNombreCliente.setText("Sin seleccionar");
+        lblNombreCliente.setForeground(Tema.NEUTRO);
         refrescarTabla();
     }
 
@@ -177,7 +242,6 @@ public class VentasForm extends JFrame {
         }
     }
 
-    /** Recarga la tabla con el contenido actual del carrito. */
     private void refrescarTabla() {
         modeloTabla.setRowCount(0);
         for (DetalleVenta d : controller.getCarrito()) {
@@ -191,7 +255,6 @@ public class VentasForm extends JFrame {
         lblTotal.setText("Total: S/ " + String.format("%.2f", controller.calcularTotal()));
     }
 
-    /** Parsea la cantidad del campo de texto. Retorna 0 si no es valida. */
     private int parseCantidad() {
         try {
             return Integer.parseInt(txtCantidad.getText().trim());
@@ -201,9 +264,10 @@ public class VentasForm extends JFrame {
     }
 
     private void configurarVentana() {
-        setTitle("Ventas");
+        setTitle("Registro de Ventas");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(720, 520);
+        setSize(780, 580);
+        setMinimumSize(new Dimension(680, 520));
         setLocationRelativeTo(null);
     }
 }
